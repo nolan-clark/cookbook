@@ -1,0 +1,332 @@
+DROP DATABASE IF EXISTS cookbook;
+CREATE DATABASE cookbook;
+USE cookbook;
+
+CREATE TABLE stores (
+id INT auto_increment PRIMARY KEY,
+store_name VARCHAR(100)
+);
+
+CREATE TABLE receipts (
+id INT auto_increment PRIMARY KEY, 
+purchase_date DATE, 
+store_id INT,
+cost DECIMAL(10,2) NOT NULL,
+FOREIGN KEY (store_id) REFERENCES stores(id)
+);
+
+CREATE TABLE meals (
+id INT auto_increment PRIMARY KEY,
+meal_name VARCHAR(100),
+price DECIMAL(5,2) NOT NULL
+);
+
+CREATE TABLE customers (
+id INT auto_increment PRIMARY KEY,
+first_name VARCHAR(100),
+last_name VARCHAR (100),
+phone VARCHAR(50),
+address VARCHAR(250),
+city VARCHAR(100),
+state CHAR(2)
+);
+
+CREATE TABLE orders (
+id INT auto_increment PRIMARY KEY,
+customer_id INT NOT NULL,
+meal_id INT NOT NULL,
+quantity INT NOT NULL,
+FOREIGN KEY (customer_id) REFERENCES customers(id),
+FOREIGN KEY (meal_id) REFERENCES meals(id)
+);
+
+CREATE TABLE payments (
+id INT auto_increment PRIMARY KEY,
+order_id INT NOT NULL,
+customer_id INT NOT NULL,
+tip DECIMAL(6,2) NOT NULL DEFAULT(0),
+FOREIGN KEY (order_id) REFERENCES orders(id),
+FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+DELIMITER $$
+
+CREATE TRIGGER auto_pay 
+    AFTER INSERT ON orders FOR EACH ROW
+    BEGIN   
+        INSERT INTO payments(order_id, customer_id)
+        VALUES(NEW.id, NEW.customer_id);
+    END;    
+$$
+
+DELIMITER ;
+
+CREATE VIEW paid_bill AS
+SELECT orders.id, orders.customer_id, first_name, last_name, orders.meal_id, meals.meal_name, (price*quantity) AS bill_paid, tip FROM cookbook.orders
+JOIN meals ON
+meals.id = orders.meal_id
+JOIN customers ON
+customers.id = orders.customer_id
+JOIN payments ON
+payments.order_id = orders.id
+ORDER BY orders.id;
+
+INSERT INTO stores (store_name) VALUES ('Harris Teeter'), ('Amazon'), ('Safeway'), ('Giant'), ('The Fresh Market'), ('Walmart'), ('Target');
+
+INSERT INTO meals (meal_name, price)
+VALUES ('Chicken Parm', 10), 
+('Chicken Kabob', 10), 
+('Kalua Pork', 10), 
+('Chicken Enchiladas', 10),
+ ('Beef Terriyaki', 12.50),
+ ('Chicken Shwarma', 10), 
+ ('Rosemary Chicken', 12), 
+ ('Surf and Turf for two', 40), 
+ ('Manicotti', 12), 
+ ('Carne Asada', 15), 
+ ('Chipotle Chicken', 12), 
+ ('Cilantro-Lime Chicken', 12),
+ ('Soy-Honey Pork', 12), 
+ ('Kefta', 15),
+ ('Chicken and Waffle', 22),
+ ('Gift Bottle', 16),
+ ('Shish Tawook', 12);
+
+INSERT INTO customers (first_name, last_name, phone, address, city, state)
+VALUES ('Steven', 'Anthony', NULL, '1705 N Roosevelt St', 'Arlington', 'VA'),
+('Justin', 'Babel', '7033428780', '6009 Sherborn ln', 'Springfield', 'VA'),
+('Louie', 'Bafford', '4437260055', '2200 12th Court N', 'Arlingotn', 'VA'),
+('Lee', 'Balduzzi', 4104095247, '565 Francis Nicholson Way', 'Annapolis', 'MD'),
+('Derek', 'Bullock', 7039430334, '878 N Abingdon', 'Arlington', 'VA'),
+('Alex', 'Camellieri', 4439756254, '3123 Key Blvd', 'Arlington', 'VA'),
+('Martin', 'Ceja', 5712478929, '4650 Washington Blvd', 'Arlington', 'VA'),
+('Cara', 'Christie', NULL, '4309 6th St S', 'Arlington', 'VA'),
+('Casey', 'Coombe', 4102003941, '809 Bay Ridge Ave', 'Annapolis', 'MD'),
+('Duncan', 'Deloach', NULL, NULL, NULL, NULL),
+('Dan', 'Gallucci', 7038641395, '1025 N Fillmore St', 'Arlington', 'VA'),
+('Ben', 'Gallucci', 7038647097, '1401 N Taft St', 'Arlington', 'VA'),
+('Rachel', 'Gardner', 5407290764, '2200 12th Court N', 'Arlington', 'VA'),
+('Chandler', 'Gill', 8649084260, '1025 N Fillmore St', 'Arlington', 'VA'),
+('Hannah', 'Graziano', 4107034143, '1200 N Rolfe St', 'Arlington', 'VA'),
+('Jen', 'Herrick', NULL, '2755 Ordway St NW', 'Washington', 'DC'),
+('Corrine', 'Hibbs', NULL, NULL, NULL, NULL),
+('Jacob', 'Hughes', 7034011767, '4704 Harvest Woods Ct', 'Fairfax', 'VA'),
+('Rachael', 'Jackson', NULL, NULL, NULL, NULL),
+('Veronica', 'Llamas', 7033888984, '10483 Malone Ct', 'Fairfax', 'VA'),
+('Angel', 'Lopez', 4439756254, '4617 N Chambliss St', 'Alexandria', 'VA'),
+('Brandon', 'Luxembourg', 7035992281, '2901 9th St N', 'Arlington', 'VA'),
+('Shawn', 'Meyers', 4106939235, '565 Francis Nicholson Way', 'Annapolis', 'MD'),
+('Nhi', 'Ngo', 7039801318, NULL, NULL, NULL),
+('Julian', 'Pena', 7039457674, '2101 S Lowell St', 'Arlingotn', 'VA'),
+('Suliaman', 'Popal', NULL, '903 N Ivy St', 'Arlington', 'VA'),
+('Nick', 'Small', 5404295536, '900 N Randolph', 'Arlington', 'VA'),
+('Andre', 'Thomas', NULL, NULL, NULL, NULL),
+('Davis', 'Wagner', 7037728451, '1401 N Taft St', 'Arlington', 'VA'),
+('Alex', 'Zaboli', 7039094528, '2301 11th St N', 'Arlington', 'VA'),
+('Amy', 'Cat', NULL, '2225 Casemont Drive', 'Falls Church', 'VA'),
+('Marcel', 'A', NULL, NULL, NULL, NULL),
+('Diane', 'Clark', 4105704519, '701 Dogwood Ln', 'Annapolis', 'MD'),
+('Kevin', 'Nanga', NULL, NULL, NULL, NULL),
+('David', 'Jesmer', NULL, NULL, NULL, NULL),
+('Thomas', 'Di Biasio', NULL, NULL, NULL, NULL),
+('Marcel', 'Abisamra', NULL, NULL, NULL, NULL),
+('Alex', 'Sommer', NULL, NULL, NULL, NULL);
+
+INSERT INTO receipts (purchase_date, store_id, cost) 
+VALUES ('2020-04-09', 1, 60.50),
+('2020-04-10', 1, 44.14),
+('2020-04-10', 2, 20),
+('2020-04-13', 1, 88.5),
+('2020-04-14', 1, 125.19),
+('2020-04-14', 1, 30.56),
+('2020-04-14', 1, 8.69),
+('2020-04-15', 1, 13.91),
+('2020-04-15', 3, 102.53),
+('2020-04-16', 4, 6.14),
+('2020-04-16', 5, 12.28),
+('2020-04-16', 1, 73.52),
+('2020-04-16', 1, 26),
+('2020-04-17', 1, 40),
+('2020-04-17', 2, 31),
+('2020-04-17', 6, 57.22),
+('2020-04-20', 1, 107.27),
+('2020-04-20', 1, 103),
+('2020-04-21', 1, 20.96),
+('2020-04-21', 1, 50.89),
+('2020-04-22', 1, 120.67),
+('2020-04-22', 1, 50.89),
+('2020-04-23', 1, 109.18),
+('2020-04-27', 1, 169.29),
+('2020-04-29', 1, 33.09),
+('2020-04-29', 1, 7.18),
+('2020-04-30', 1, 98.86),
+('2020-04-30', 2, 10.59),
+('2020-04-30', 1, 14.93),
+('2020-05-03', 1, 252.53),
+('2020-05-03', 7, 80),
+('2020-05-05', 1, 94.94);
+
+INSERT INTO orders (customer_id, meal_id, quantity) 
+VALUES (15, 1, 1),
+(25, 1, 2),
+(25, 2, 2),
+(30, 2, 1),
+(3, 2, 2),
+(12, 2, 1),
+(34, 2, 1),
+(5, 2, 2),
+(25, 3, 1),
+(5, 3, 2),
+(11, 3, 2),
+(2, 3, 2),
+(3, 3, 2),
+(30, 3, 1),
+(24, 3, 3),
+(19, 3, 3),
+(18, 4, 4),
+(11, 4, 3),
+(29, 4, 1),
+(12, 4, 1),
+(34, 4, 1),
+(5, 4, 2),
+(24, 4, 3),
+(15, 5, 6),
+(5, 5, 2),
+(30, 5, 1),
+(34, 5, 1),
+(18, 5, 2),
+(2, 5, 2),
+(27, 5, 1),
+(22, 5, 1),
+(5, 6, 2),
+(12, 6, 2),
+(11, 6, 2),
+(30, 6, 2),
+(3, 6, 2),
+(24, 6, 2),
+(15, 6, 1),
+(33, 6, 6),
+(9, 6, 2),
+(4, 6, 1),
+(23, 6, 2),
+(27, 7, 1),
+(30, 7, 1),
+(6, 8, 1),
+(21, 7, 1),
+(15, 7, 1),
+(30, 9, 1),
+(11, 9, 2),
+(24, 9, 2),
+(35, 9, 4),
+(3, 9, 2),
+(20, 9, 3),
+(18, 9, 2),
+(15, 9, 1),
+(17, 9, 2),
+(30, 10, 1),
+(11, 10, 2),
+(24, 10, 1),
+(7, 10, 1),
+(5, 10, 2),
+(19, 10, 3),
+(34, 10, 1),
+(35, 10, 4),
+(11, 11, 2),
+(30, 11, 1),
+(12, 11, 2),
+(3, 11, 2),
+(7, 11, 1),
+(25, 11, 1),
+(9, 10, 4),
+(23, 10, 5),
+(4, 10, 2),
+(5, 12, 2),
+(30, 12, 1),
+(11, 13, 2),
+(2, 13, 2),
+(15, 13, 1),
+(5, 13, 1),
+(30, 13, 1),
+(19, 13, 2),
+(3, 13, 2),
+(36, 14, 5),
+(30, 14, 1),
+(5, 14, 1),
+(15, 14, 1),
+(18, 14, 1),
+(25, 11, 1),
+(30, 11, 1),
+(3, 11, 1),
+(11, 11, 2),
+(16, 11, 2),
+(8, 11, 4),
+(28, 11, 2),
+(1,11,2),
+(10, 11, 2),
+(26, 11, 2),
+(15, 11, 1),
+(31, 15, 2),
+(31, 16, 1),
+(37, 15, 3),
+(11, 15, 1),
+(18, 15, 1),
+(16, 15, 1),
+(34, 15, 1),
+(24, 15, 1),
+(24, 16, 1),
+(38, 17, 3),
+(8, 17, 4),
+(24, 17, 2),
+(35, 17, 3),
+(30, 17, 1),
+(15, 17, 1);
+
+UPDATE payments SET tip = 1
+WHERE id IN (82, 94);
+
+UPDATE payments SET tip = 2
+WHERE id IN (49, 87);
+
+UPDATE payments SET tip = 4
+WHERE id = 104;
+
+UPDATE payments SET tip = 5
+WHERE id IN (5, 6, 19, 20, 28, 42, 45, 69, 92, 103);
+
+UPDATE payments SET tip = 6
+WHERE id IN (67, 95);
+
+UPDATE payments SET tip = 7
+WHERE id IN (91, 106);
+
+UPDATE payments SET tip = 10
+WHERE id IN (23, 33, 37, 72, 76, 102);
+
+UPDATE payments SET tip = 12
+WHERE id IN (99, 109);
+
+UPDATE payments SET tip = 15
+WHERE id IN (11, 16, 83);
+
+UPDATE payments SET tip = 16
+WHERE id = 96;
+
+UPDATE payments SET tip = 19
+WHERE id = 111;
+
+UPDATE payments SET tip = 20
+WHERE id = 93;
+
+UPDATE payments SET tip = 22
+WHERE id = 51;
+
+UPDATE payments SET tip = 32
+WHERE id = 58;
+
+UPDATE payments SET tip = 40
+WHERE id = 15;
+
+UPDATE payments SET tip = 64
+WHERE id = 108;
+
+
