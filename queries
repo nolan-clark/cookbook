@@ -1,0 +1,42 @@
+-- LARGEST BILL
+SELECT first_name, last_name, SUM(price*quantity) AS net_payment FROM cookbook.orders
+JOIN meals ON
+meals.id = orders.meal_id
+JOIN customers ON
+customers.id = orders.customer_id
+GROUP BY customer_id
+ORDER BY net_payment DESC;
+
+-- MOST TIMES ORDERING
+SELECT first_name, last_name, COUNT(customer_id) AS times_ordered FROM cookbook.orders
+JOIN meals ON
+meals.id = orders.meal_id
+JOIN customers ON
+customers.id = orders.customer_id
+GROUP BY customer_id
+ORDER BY times_ordered DESC;
+
+
+-- MOST MONEY SPENT/TIPPED
+SELECT first_name, last_name, SUM(tip+bill_paid) AS support FROM paid_bill
+GROUP BY customer_id
+ORDER BY support DESC;
+
+-- MOST MONEY w/tip per meal
+SELECT meal_id, meal_name, SUM(tip+bill_paid) AS support FROM paid_bill
+GROUP BY meal_id
+ORDER BY support DESC;
+
+-- MOST ORDERED MEALS
+SELECT meal_name, SUM(quantity) AS dishes_made FROM orders
+JOIN meals ON
+meals.id = orders.meal_id
+GROUP BY meals.id
+ORDER BY dishes_made DESC;
+
+-- MOST INCOME PER MEAL
+SELECT meal_name, SUM(quantity) AS dishes_made, SUM(price*quantity) AS money_earned FROM orders
+JOIN meals ON
+meals.id = orders.meal_id
+GROUP BY meals.id
+ORDER BY money_earned DESC;
